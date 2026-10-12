@@ -1,5 +1,4 @@
 const KEY = 'patient-records-v1'
-const DKEY = 'patient-records-doctor-v1'
 
 export const DISCLAIMER = 'This certificate is being issued upon the request of the above-mentioned for whatever purpose it may serve, except those of a medico-legal-nature.'
 
@@ -19,7 +18,7 @@ export const blankPatient = () => ({
 })
 
 export const blankDoctor = () => ({
-  name: '', specialty: '', license: '', ptr: '', phic: '',
+  name: 'Ruth Marie Santiago', specialty: '', license: '108773', ptr: '', phic: '',
   clinic: 'AFP Medical Center', clinicInfo: 'V. Luna Avenue, Pinyahan, Quezon City',
 })
 
@@ -35,23 +34,13 @@ export function normalizePatient(p) {
   }
 }
 
-export function loadPatients() {
+// records saved by the old, single-device version (used once for upload)
+export function loadLocalPatients() {
   try {
     const d = JSON.parse(localStorage.getItem(KEY))
     return Array.isArray(d?.patients) ? d.patients.map(normalizePatient) : []
   } catch { return [] }
 }
-
-export function savePatients(patients) {
-  try { localStorage.setItem(KEY, JSON.stringify({ patients })); return true }
-  catch { return false }
-}
-
-export function loadDoctor() {
-  try { return { ...blankDoctor(), ...JSON.parse(localStorage.getItem(DKEY)) } }
-  catch { return blankDoctor() }
-}
-export function saveDoctor(d) { try { localStorage.setItem(DKEY, JSON.stringify(d)) } catch { /* ignore */ } }
 
 export function ageFrom(bday) {
   if (!bday) return ''

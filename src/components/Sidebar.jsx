@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 
-export default function Sidebar({ patients, curId, query, setQuery, onSelect, onNew, onExport, onImport, onDoctor }) {
+export default function Sidebar({ patients, curId, query, setQuery, onSelect, onNew, onExport, onImport, onDoctor, onLock, status }) {
   const fileRef = useRef(null)
   const q = query.toLowerCase()
   const rows = patients
@@ -10,6 +10,7 @@ export default function Sidebar({ patients, curId, query, setQuery, onSelect, on
   return (
     <aside>
       <h1>Patient Records</h1>
+      <small className="status">{status === 'saving' ? 'Saving…' : status === 'error' ? 'Not saved. Retrying…' : 'All changes saved'}</small>
       <input type="search" placeholder="Search name, unit, rank…" aria-label="Search patients"
         value={query} onChange={e => setQuery(e.target.value)} />
       <button className="btn" onClick={onNew}>New patient</button>
@@ -26,6 +27,7 @@ export default function Sidebar({ patients, curId, query, setQuery, onSelect, on
         <button className="btn" onClick={onDoctor}>Doctor details</button>
         <button className="btn" onClick={onExport}>Export backup</button>
         <button className="btn" onClick={() => fileRef.current.click()}>Import backup</button>
+        <button className="btn" onClick={onLock}>Lock</button>
         <input ref={fileRef} type="file" accept="application/json" hidden
           onChange={e => { const f = e.target.files[0]; e.target.value = ''; if (f) onImport(f) }} />
       </div>

@@ -1,19 +1,21 @@
-# Patient Records (Vite + React)
+# Patient Records (Vite + React on Vercel)
 
-Patient record app based on the clinic template: patient details, A. Medical history,
-B. Laboratories/diagnostics, C. SOAP notes, D. Medical certificate (printable).
+Records are stored in a database (Upstash Redis) so every device sees the same content.
+The site is locked behind a passcode.
 
-## Run locally
-    npm install
-    npm run dev
+## One-time setup on Vercel
+1. Project > Storage > Create Database > Upstash for Redis. Connect it to this project
+   (this adds KV_REST_API_URL and KV_REST_API_TOKEN automatically).
+2. Project > Settings > Environment Variables: add `APP_PASSWORD` (the passcode people type to open the site).
+3. Deployments > latest deployment > Redeploy (so the new variables are picked up).
 
-## Deploy to Vercel
-1. Push this folder to a GitHub repo.
-2. In Vercel: Add New > Project > import the repo. Vercel detects Vite automatically
-   (build: `npm run build`, output: `dist`).
-   Or from the terminal: `npx vercel --prod`.
+## Updating
+    git add .
+    git commit -m "Describe the change"
+    git push
 
-## Data storage
-Records are saved in the browser's localStorage (per device/browser). Use "Export backup"
-regularly. Before storing real patient data, add authentication and a database
-(e.g. Supabase) because a Vercel URL is public.
+## Notes
+- `npm run dev` only serves the page. The data routes live in `/api` and run on Vercel
+  (or with `npx vercel dev` after `vercel link` and `vercel env pull`).
+- Printed certificate defaults (physician name, license no., clinic) are in `src/utils.js`
+  (`blankDoctor`) and can be edited in the app under "Doctor details"; edits are shared across devices.
