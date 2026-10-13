@@ -30,5 +30,8 @@ export const api = {
   savePatient: p => request('/api/patient', { method: 'PUT', body: p }),
   deletePatient: id => request('/api/patient?id=' + encodeURIComponent(id), { method: 'DELETE' }),
   saveDoctor: d => request('/api/doctor', { method: 'PUT', body: d }),
+  photo: id => request('/api/photo?id=' + encodeURIComponent(id)),
+  savePhoto: (id, data) => request('/api/photo', { method: 'PUT', body: { id, data } }),
+  deletePhoto: id => request('/api/photo?id=' + encodeURIComponent(id), { method: 'DELETE' }),
   importAll: patients => request('/api/import', { method: 'POST', body: { patients } }),
 }

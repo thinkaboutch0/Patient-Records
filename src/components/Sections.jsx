@@ -1,5 +1,8 @@
+import { useEffect, useRef, useState } from 'react'
 import { Field, Area } from './Fields.jsx'
-import { today } from '../utils.js'
+import { today, uid } from '../utils.js'
+import { api } from '../api.js'
+import { compressImage, getPhoto, putPhoto, dropPhoto } from '../photos.js'
 
 const HISTORY = [
   ['procedures', 'Procedures'], ['immunization', 'Immunization'], ['allergies', 'Allergies'],
@@ -46,20 +49,100 @@ function Entry({ title, onRemove, children, extra }) {
 const confirmRemove = fn => () => { if (confirm('Remove this entry?')) fn() }
 
 /* B. Laboratories / diagnostics */
+function Thumb({ id, name, onOpen }) {
+  const [src, setSrc] = useState(null)
+  const [bad, setBad] = useState(false)
+  useEffect(() => {
+    let on = true
+    getPhoto(id).then(d => on && setSrc(d)).catch(() => on && setBad(true))
+    return () => { on = false }
+  }, [id])
+  if (bad) return <div className="ph-empty">Unavailable</div>
+  if (!src) return <div className="ph-empty">Loading…</div>
+  return <button className="ph-btn" onClick={onOpen} aria-label={`View photo ${name || ''}`}><img src={src} alt={name || 'Laboratory photo'} /></button>
+}
+
+function Viewer({ id, onClose }) {
+  const [src, setSrc] = useState(null)
+  useEffect(() => { getPhoto(id).then(setSrc).catch(() => onClose()) }, [id]) // eslint-disable-line
+  useEffect(() => {
+    const k = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', k)
+    return () => window.removeEventListener('keydown', k)
+  }, [onClose])
+  return (
+    <div className="modal-bg" onClick={onClose} role="dialog" aria-modal="true" aria-label="Photo viewer">
+      {src ? <img className="lightbox" src={src} alt="Laboratory photo, enlarged" /> : <span style={{ color: '#fff' }}>Loading…</span>}
+      <button className="btn sm lb-close" onClick={onClose}>Close</button>
+    </div>
+  )
+}
+
+function LabEntry({ e, i, update, remove }) {
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [open, setOpen] = useState(null)
+  const fileRef = useRef(null)
+  const latest = useRef(e)
+  latest.current = e
+  const photos = e.photos || []
+
+  async function addFiles(files) {
+    setBusy(true); setErr('')
+    const added = []
+    for (const f of files) {
+      try {
+        const data = await compressImage(f)
+        const id = uid() + uid()
+        await api.savePhoto(id, data)
+        putPhoto(id, data)
+        added.push({ id, name: f.name })
+      } catch (ex) { setErr(`${f.name}: ${ex.message}`) }
+    }
+    if (added.length) update(i, 'photos', [...(latest.current.photos || []), ...added])
+    setBusy(false)
+  }
+  function removePhoto(id) {
+    if (!confirm('Remove this photo?')) return
+    update(i, 'photos', photos.filter(p => p.id !== id))
+    dropPhoto(id)
+  }
+
+  return (
+    <Entry title={`Result ${i + 1}`} onRemove={confirmRemove(() => { photos.forEach(p => dropPhoto(p.id)); remove(i) })}>
+      <div className="grid">
+        <Field label="Date" type="date" cls="w3" value={e.date} onChange={v => update(i, 'date', v)} />
+        <Field label="Test / procedure" cls="w4" value={e.test} onChange={v => update(i, 'test', v)} />
+        <Field label="Result" cls="w12" value={e.result} onChange={v => update(i, 'result', v)} />
+        <Field label="Interpretation / remarks" cls="w12" value={e.notes} onChange={v => update(i, 'notes', v)} />
+      </div>
+      <div className="photos-h">
+        <span>Photos</span>
+        <button className="btn ghost sm" disabled={busy} onClick={() => fileRef.current.click()}>{busy ? 'Uploading…' : '+ Add photo'}</button>
+        <input ref={fileRef} type="file" accept="image/*" multiple hidden
+          onChange={ev => { const fs = [...ev.target.files]; ev.target.value = ''; if (fs.length) addFiles(fs) }} />
+      </div>
+      {err && <p className="err" role="alert">{err}</p>}
+      {photos.length > 0 && (
+        <div className="photos">
+          {photos.map(ph => (
+            <div className="ph" key={ph.id}>
+              <Thumb id={ph.id} name={ph.name} onOpen={() => setOpen(ph.id)} />
+              <button className="btn ghost sm" onClick={() => removePhoto(ph.id)}>Remove</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {open && <Viewer id={open} onClose={() => setOpen(null)} />}
+    </Entry>
+  )
+}
+
 export function Labs({ items, add, update, remove }) {
   return (
     <>
-      <ListHeader hint="Record each laboratory or diagnostic result." button="Add result" onAdd={add} />
-      {items.map((e, i) => (
-        <Entry key={i} title={`Result ${i + 1}`} onRemove={confirmRemove(() => remove(i))}>
-          <div className="grid">
-            <Field label="Date" type="date" cls="w3" value={e.date} onChange={v => update(i, 'date', v)} />
-            <Field label="Test / procedure" cls="w4" value={e.test} onChange={v => update(i, 'test', v)} />
-            <Field label="Result" cls="w12" value={e.result} onChange={v => update(i, 'result', v)} />
-            <Field label="Interpretation / remarks" cls="w12" value={e.notes} onChange={v => update(i, 'notes', v)} />
-          </div>
-        </Entry>
-      ))}
+      <ListHeader hint="Record each laboratory or diagnostic result. Photos of result sheets or scans can be attached." button="Add result" onAdd={add} />
+      {items.map((e, i) => <LabEntry key={i} e={e} i={i} update={update} remove={remove} />)}
       {!items.length && <p className="hint">No results yet.</p>}
     </>
   )

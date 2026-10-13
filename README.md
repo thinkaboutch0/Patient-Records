@@ -19,3 +19,7 @@ The site is locked behind a passcode.
   (or with `npx vercel dev` after `vercel link` and `vercel env pull`).
 - Printed certificate defaults (physician name, license no., clinic) are in `src/utils.js`
   (`blankDoctor`) and can be edited in the app under "Doctor details"; edits are shared across devices.
+
+## Photos
+Photos attached to laboratory results are shrunk in the browser (about 1600 px, under ~0.5 MB)
+and stored in the same Redis database (`photo:<id>` keys). They are not included in "Export backup".

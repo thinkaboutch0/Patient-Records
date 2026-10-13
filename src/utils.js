@@ -10,7 +10,7 @@ export const today = () => {
 
 export const blankSoap = () => ({ date: today(), clinic: '', mode: 'advanced', cc: '', hpi: '', remarks: [''], dx: [''], plan: [''], followUp: null })
 export const blankCert = () => ({ date: today(), impression: '', days: '1', recs: '', disclaimer: DISCLAIMER })
-export const blankLab = () => ({ date: today() })
+export const blankLab = () => ({ date: today(), photos: [] })
 
 export const blankPatient = () => ({
   id: uid(), name: '', bday: '', age: '', sex: '', address: '',
@@ -25,7 +25,7 @@ export const blankDoctor = () => ({
 // keeps records saved by the earlier version working
 export function normalizePatient(p) {
   return {
-    ...blankPatient(), ...p, h: p.h || {}, labs: p.labs || [],
+    ...blankPatient(), ...p, h: p.h || {}, labs: (p.labs || []).map(l => ({ photos: [], ...l })),
     soap: (p.soap || []).map(e =>
       e.mode ? { ...blankSoap(), ...e }
         : (e.s || e.o || e.a || e.p) ? { ...blankSoap(), ...e, mode: 'simple' }

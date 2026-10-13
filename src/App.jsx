@@ -6,6 +6,7 @@ import { History, Labs, Soap, Certificates } from './components/Sections.jsx'
 import CertificatePrint from './components/CertificatePrint.jsx'
 import DoctorDialog from './components/DoctorDialog.jsx'
 import { api, getPw, setPw, clearPw } from './api.js'
+import { dropPhoto } from './photos.js'
 import { blankPatient, blankSoap, blankCert, blankLab, blankDoctor, normalizePatient, loadLocalPatients, ageFrom, today } from './utils.js'
 
 const TABS = [['a', 'A. Medical history'], ['b', 'B. Laboratories / diagnostics'], ['c', 'C. SOAP notes'], ['d', 'D. Medical certificate']]
@@ -130,7 +131,7 @@ export default function App() {
   useEffect(() => {
     if (phase !== 'ready') return
     const run = () => { if (document.visibilityState === 'visible') refresh() }
-    const t = setInterval(run, 20000)
+    const t = setInterval(run, 60000)
     document.addEventListener('visibilitychange', run)
     window.addEventListener('focus', run)
     return () => { clearInterval(t); document.removeEventListener('visibilitychange', run); window.removeEventListener('focus', run) }
@@ -177,6 +178,7 @@ export default function App() {
   async function deletePatient() {
     if (!confirm(`Delete ${patient.name || 'this patient'}? This cannot be undone.`)) return
     const id = curId
+    patient.labs.flatMap(l => l.photos || []).forEach(ph => dropPhoto(ph.id))
     pending.current.delete(id)
     editSeq.current++
     setPatients(ps => ps.filter(p => p.id !== id))

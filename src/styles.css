@@ -97,3 +97,12 @@ aside{border-right:4px solid var(--gold)}
 .gate-card h1{margin:0 0 4px;font:600 24px Georgia,serif;color:var(--brand-d)}
 .err{color:#a1262c;margin:10px 0 0}
 @media print{.gate{display:none!important}}
+
+.photos-h{display:flex;align-items:center;gap:12px;margin-top:14px;color:var(--mute);font-size:12.5px}
+.photos{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.ph{width:112px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.ph-btn{padding:0;border:1px solid var(--line);border-radius:4px;background:#fff;line-height:0;cursor:zoom-in;overflow:hidden}
+.ph-btn img{width:112px;height:112px;object-fit:cover}
+.ph-empty{width:112px;height:112px;display:grid;place-items:center;border:1px dashed var(--line);border-radius:4px;color:var(--mute);font-size:12.5px}
+.lightbox{max-width:94vw;max-height:86vh;border-radius:4px;background:#fff}
+.lb-close{position:fixed;top:14px;right:14px}
